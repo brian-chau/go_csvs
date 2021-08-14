@@ -3,25 +3,28 @@ package main
 import (
     "encoding/csv"
     "fmt"
+    "io"
     "log"
     "os"
-    "io"
+    "strconv"
 )
 
-func readCSVFile(filePath string) []map[string]string {
+func read_csv_record( filePath string ) {
     f, err := os.Open(filePath)
     if err != nil {
-        log.Fatal("Unable to read input file: " + filePath, err);
+        log.Fatal("Unable to read input file: " + filePath, err)
     }
     defer f.Close()
 
     r := csv.NewReader(f)
-    rows := []map[string]string{}
     var header []string
+    pu_count, do_count := 0, 0
     for {
         record, err := r.Read()
         if err == io.EOF {
-            break
+            fmt.Println("PU Count: " + strconv.Itoa(pu_count))
+            fmt.Println("DO Count: " + strconv.Itoa(do_count))
+            return
         }
         if err != nil {
             log.Fatal(err)
@@ -29,14 +32,24 @@ func readCSVFile(filePath string) []map[string]string {
         if header == nil {
             header = record
         } else {
-            dict := map[string]string{}
+            csv_record := map[string]string{}
             for i := range header {
-                dict[header[i]] = record[i]
+                csv_record[header[i]] = record[i]
             }
-            rows = append(rows, dict)
+            payment_type := csv_record["payment_type"]
+            pu_location  := csv_record["PULocationID"]
+            do_location  := csv_record["DOLocationID"]
+            if payment_type == "3" {
+                if pu_location == "170" {
+                    pu_count += 1
+                } else if do_location == "170" {
+                    do_count += 1
+                }
+            }
         }
     }
-    return rows
+
+    return
 }
 
 func main() {
@@ -44,10 +57,5 @@ func main() {
         log.Fatal("Too few arguments.")
     }
     filename := os.Args[1]
-    records := readCSVFile(filename)
-    fmt.Println(records)
-
-    //for _, i := range records {
-    //    fmt.Println(i["a"])
-    //}
+    read_csv_record(filename)
 }
