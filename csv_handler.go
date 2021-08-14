@@ -9,7 +9,7 @@ import (
     "strconv"
 )
 
-func read_csv_record( filePath string ) {
+func process_csv_line_by_line( filePath string ) {
     f, err := os.Open(filePath)
     if err != nil {
         log.Fatal("Unable to read input file: " + filePath, err)
@@ -57,5 +57,5 @@ func main() {
         log.Fatal("Too few arguments.")
     }
     filename := os.Args[1]
-    read_csv_record(filename)
+    process_csv_line_by_line(filename)
 }
