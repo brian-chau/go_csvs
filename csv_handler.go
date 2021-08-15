@@ -9,7 +9,22 @@ import (
     "strconv"
 )
 
-func process_csv_line_by_line( filePath string ) {
+func check_condition( csv_record map[string]string ) (pu_count int, do_count int) {
+    payment_type       := csv_record["payment_type"]
+    pu_location        := csv_record["PULocationID"]
+    do_location        := csv_record["DOLocationID"]
+    pu_count, do_count  = 0, 0
+    if payment_type == "3" {
+        if pu_location == "170" {
+            pu_count += 1
+        } else if do_location == "170" {
+            do_count += 1
+        }
+    }
+    return pu_count, do_count
+}
+
+func process_csv_line_by_line( filePath string, check_condition func( map[string]string ) (int, int) ) {
     f, err := os.Open(filePath)
     if err != nil {
         log.Fatal("Unable to read input file: " + filePath, err)
@@ -36,16 +51,9 @@ func process_csv_line_by_line( filePath string ) {
             for i := range header {
                 csv_record[header[i]] = record[i]
             }
-            payment_type := csv_record["payment_type"]
-            pu_location  := csv_record["PULocationID"]
-            do_location  := csv_record["DOLocationID"]
-            if payment_type == "3" {
-                if pu_location == "170" {
-                    pu_count += 1
-                } else if do_location == "170" {
-                    do_count += 1
-                }
-            }
+            pu_, do_ := check_condition( csv_record )
+            pu_count += pu_
+            do_count += do_
         }
     }
 
@@ -57,5 +65,5 @@ func main() {
         log.Fatal("Too few arguments.")
     }
     filename := os.Args[1]
-    process_csv_line_by_line(filename)
+    process_csv_line_by_line( filename, check_condition )
 }
