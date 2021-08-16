@@ -17,10 +17,10 @@ func process_csv_line_by_line( filePath string ) {
     defer f.Close()
 
     r := csv.NewReader(f)
-    var header []string
+    is_first_line := true
+    header := map[string]int{}
+
     pu_count, do_count := 0, 0
-    payment_type_index := 0
-    pu_index, do_index := 0, 0
     for {
         record, err := r.Read()
         if err == io.EOF {
@@ -31,22 +31,16 @@ func process_csv_line_by_line( filePath string ) {
         if err != nil {
             log.Fatal(err)
         }
-        if header == nil {
-            header = record
-            for i := range header {
-                if header[i] == "payment_type" {
-                    payment_type_index = i;
-                } else if header[i] == "PULocationID" {
-                    pu_index           = i;
-                } else if header[i] == "DOLocationID" {
-                    do_index           = i;
-                }
+        if is_first_line {
+            is_first_line = false
+            for i := range record {
+                header[record[i]] = i
             }
         } else {
-            if record[payment_type_index] == "3" {
-                if record[pu_index] == "170" {
+            if record[header["payment_type"]] == "3" {
+                if record[header["PULocationID"]] == "170" {
                     pu_count += 1
-                } else if record[do_index] == "170" {
+                } else if record[header["DOLocationID"]] == "170" {
                     do_count += 1
                 }
             }
